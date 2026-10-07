@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apparaattemperatuur</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #121316;
+      color: #e2e2e2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 1rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .container {
+      width: 100%;
+      max-width: 24rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2rem;
+      padding-top: 0.5rem;
+    }
+    .header-title {
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: #f3f4f6;
+      letter-spacing: 0.025em;
+    }
+    .status-circle {
+      width: 6rem;
+      height: 6rem;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      background-color: #1f9d55;
+      transition: background-color 0.5s ease;
+    }
+    .status-circle svg {
+      width: 2.25rem;
+      height: 2.25rem;
+      fill: #000000;
+    }
+    .status-text {
+      font-size: 1.875rem;
+      font-weight: 400;
+      color: #f3f4f6;
+      margin-bottom: 1.75rem;
+      transition: all 0.3s ease;
+    }
+    .gauge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 1.5rem;
+      height: 2.5rem;
+    }
+    .gauge-bar {
+      border-radius: 9999px;
+      transition: all 0.3s ease;
+    }
+    .temp-display {
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: #f3f4f6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div class="header">
+      <h1 class="header-title">Apparaattemperatuur</h1>
+    </div>
+
+    <div id="status-circle" class="status-circle">
+      <svg viewBox="0 0 24 24">
+        <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-3 7c-1.66 0-3-1.34-3-3 0-1.02.51-1.93 1.3-2.48L11 14V5c0-.55.45-1 1-1s1 .45 1 1v9l.7.52c.79.55 1.3 1.46 1.3 2.48 0 1.66-1.34 3-3 3z"/>
+      </svg>
+    </div>
+
+    <h2 id="status-text" class="status-text">Normaal</h2>
+
+    <div id="gauge" class="gauge"></div>
+
+    <div id="temp-display" class="temp-display">31,3°C</div>
+
+  </div>
+
+  <script>
+    let currentTemp = 31.3;
+    let targetTemp = 31.3;
+
+    const barColors = [
+      '#0092c7', '#0092c7', '#0092c7', '#00aaa7', 
+      '#1f9d55', '#1f9d55', '#1f9d55', '#1f9d55', 
+      '#1f9d55', '#1f9d55', '#1f9d55', '#1f9d55', 
+      '#f4a100', '#f4a100', '#e86018', '#eb4435', '#eb4435'
+    ];
+
+    const tempDisplay = document.getElementById('temp-display');
+    const statusText = document.getElementById('status-text');
+    const statusCircle = document.getElementById('status-circle');
+    const gaugeContainer = document.getElementById('gauge');
+
+    barColors.forEach((color) => {
+      const bar = document.createElement('div');
+      bar.className = 'gauge-bar';
+      bar.style.backgroundColor = color;
+      bar.style.width = '8px';
+      bar.style.height = '20px';
+      gaugeContainer.appendChild(bar);
+    });
+
+    const gaugeBars = Array.from(gaugeContainer.children);
+
+    function updateGauge(temp) {
+      const minTemp = 15;
+      const maxTemp = 45;
+      const normalized = Math.max(0, Math.min(1, (temp - minTemp) / (maxTemp - minTemp)));
+      const activeIndex = Math.floor(normalized * (gaugeBars.length - 1));
+
+      gaugeBars.forEach((bar, index) => {
+        if (index === activeIndex) {
+          bar.style.width = '10px';
+          bar.style.height = '36px';
+        } else {
+          bar.style.width = '8px';
+          bar.style.height = '20px';
+        }
+      });
+
+      if (temp < 20) {
+        statusText.innerText = 'Koud';
+        statusCircle.style.backgroundColor = '#0092c7';
+      } else if (temp <= 38) {
+        statusText.innerText = 'Normaal';
+        statusCircle.style.backgroundColor = '#1f9d55';
+      } else if (temp <= 42) {
+        statusText.innerText = 'Warm';
+        statusCircle.style.backgroundColor = '#f4a100';
+      } else {
+        statusText.innerText = 'Heet';
+        statusCircle.style.backgroundColor = '#eb4435';
+      }
+    }
+
+    function generateNewTarget() {
+      const fluctuation = (Math.random() - 0.5) * 1.8;
+      targetTemp = Math.min(Math.max(currentTemp + fluctuation, 28.5), 34.5);
+    }
+
+    function animateTemp() {
+      const step = (targetTemp - currentTemp) * 0.08;
+      currentTemp += step;
+      
+      const formatted = currentTemp.toFixed(1).replace('.', ',');
+      tempDisplay.innerText = formatted + '°C';
+      
+      updateGauge(currentTemp);
+
+      if (Math.abs(targetTemp - currentTemp) < 0.05) {
+        generateNewTarget();
+      }
+
+      requestAnimationFrame(animateTemp);
+    }
+
+    setInterval(generateNewTarget, 2500);
+    animateTemp();
+  </script>
+
+</body>
+</html>
